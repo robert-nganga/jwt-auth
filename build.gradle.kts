@@ -42,4 +42,6 @@ dependencies {
     //Koin Dependency Injection
     implementation("io.insert-koin:koin-ktor:3.5.3")
     implementation("io.insert-koin:koin-logger-slf4j:3.5.3")
+
+    implementation("org.mongodb:bson-kotlinx:5.0.0")
 }

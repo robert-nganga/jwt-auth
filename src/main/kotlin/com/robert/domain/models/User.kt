@@ -1,4 +1,4 @@
-package com.robert.domain
+package com.robert.domain.models
 
 import org.bson.codecs.pojo.annotations.BsonId
 import org.bson.types.ObjectId
@@ -9,6 +9,7 @@ data class User(
     val userName: String,
     val email: String,
     val password: String,
+    val salt: String,
     val amountDue: String,
     val amountPaid: String,
 )

@@ -1,4 +1,4 @@
-package com.robert.domain
+package com.robert.domain.models
 
 import org.bson.types.ObjectId
 
