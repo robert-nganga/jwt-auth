@@ -2,6 +2,7 @@
 val ktor_version: String by project
 val kotlin_version: String by project
 val logback_version: String by project
+val commons_codec_version: String by project
 
 plugins {
     kotlin("jvm") version "1.9.23"
@@ -44,4 +45,7 @@ dependencies {
     implementation("io.insert-koin:koin-logger-slf4j:3.5.3")
 
     implementation("org.mongodb:bson-kotlinx:5.0.0")
+    implementation("commons-codec:commons-codec:$commons_codec_version")
+
+//    sshAntTask("org.apache.ant:ant-jsch:1.10.12")
 }
