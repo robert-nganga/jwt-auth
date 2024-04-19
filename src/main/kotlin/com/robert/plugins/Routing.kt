@@ -20,7 +20,7 @@ fun Application.configureRouting(
 ) {
     routing {
         signIn(userDataSource, hashingService, tokenService, tokenConfig)
-        signUp(hashingService, userDataSource)
+        signUp(hashingService, userDataSource, tokenService, tokenConfig)
         authenticate()
         getSecretInfo()
     }

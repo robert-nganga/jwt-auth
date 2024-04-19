@@ -2,7 +2,6 @@ package com.robert
 
 import com.robert.domain.models.User
 import com.robert.domain.ports.UserRepository
-import com.robert.infrastructure.repository.UserRepositoryImpl
 import com.robert.request.AuthRequest
 import com.robert.response.AuthResponse
 import com.robert.security.hashing.HashingService
@@ -10,7 +9,6 @@ import com.robert.security.hashing.SaltedHash
 import com.robert.security.tokens.TokenClaim
 import com.robert.security.tokens.TokenConfig
 import com.robert.security.tokens.TokenService
-import io.ktor.server.routing.*
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
@@ -22,18 +20,20 @@ import org.apache.commons.codec.digest.DigestUtils
 
 fun Route.signUp(
     hashingService: HashingService,
-    userDataSource: UserRepository
+    userDataSource: UserRepository,
+    tokenService: TokenService,
+    tokenConfig: TokenConfig
 ) {
     post("signup") {
         val request = call.receiveNullable<AuthRequest>() ?: kotlin.run {
-            call.respond(HttpStatusCode.BadRequest)
+            call.respond(HttpStatusCode.BadRequest, "Invalid request")
             return@post
         }
 
         val areFieldsBlank = request.email.isBlank() || request.password.isBlank()
         val isPwTooShort = request.password.length < 8
         if(areFieldsBlank || isPwTooShort) {
-            call.respond(HttpStatusCode.Conflict)
+            call.respond(HttpStatusCode.Conflict, "Invalid username or password")
             return@post
         }
 
@@ -43,13 +43,34 @@ fun Route.signUp(
             password = saltedHash.hash,
             salt = saltedHash.salt,
         )
-        val wasAcknowledged = userDataSource.insertUser(user)
-        if(!wasAcknowledged)  {
-            call.respond(HttpStatusCode.Conflict)
+
+        // Verify if user already exists
+        val dbUser = userDataSource.getUserByEmail(user.email)
+        if(dbUser != null){
+            call.respond(HttpStatusCode.Conflict, "User with this email already exists")
             return@post
         }
 
-        call.respond(HttpStatusCode.OK)
+        val insertedId = userDataSource.insertUser(user)
+        if(insertedId == null)  {
+            call.respond(HttpStatusCode.Conflict, "Unknown Error occurred")
+            return@post
+        }
+
+        val token = tokenService.generate(
+            config = tokenConfig,
+            TokenClaim(
+                name = "userId",
+                value = insertedId
+            )
+        )
+
+        call.respond(
+            status = HttpStatusCode.OK,
+            message = AuthResponse(
+                token = token
+            )
+        )
     }
 }
 
@@ -60,8 +81,8 @@ fun Route.signIn(
     tokenConfig: TokenConfig
 ) {
     post("signin") {
-        val request = call.receiveOrNull<AuthRequest>() ?: kotlin.run {
-            call.respond(HttpStatusCode.BadRequest)
+        val request = call.receiveNullable<AuthRequest>() ?: kotlin.run {
+            call.respond(HttpStatusCode.BadRequest, "Invalid request")
             return@post
         }
 

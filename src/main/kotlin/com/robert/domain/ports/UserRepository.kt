@@ -4,5 +4,5 @@ import com.robert.domain.models.User
 
 interface UserRepository {
     suspend fun getUserByEmail(email: String): User?
-    suspend fun insertUser(user: User): Boolean
+    suspend fun insertUser(user: User): String?
 }

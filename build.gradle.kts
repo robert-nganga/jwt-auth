@@ -38,7 +38,7 @@ dependencies {
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version")
 
     //MongoDB
-    implementation("org.mongodb:mongodb-driver-kotlin-coroutine:4.10.1")
+    implementation("org.mongodb:mongodb-driver-kotlin-coroutine:5.0.0")
 
     //Koin Dependency Injection
     implementation("io.insert-koin:koin-ktor:3.5.3")

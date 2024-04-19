@@ -16,13 +16,13 @@ class UserRepositoryImpl(
 
     override suspend fun getUserByEmail(email: String): User? {
         return mongoDb.getCollection<User>(USER_COLLECTION)
-            .find<User>(Filters.eq("_email", email))
+            .find<User>(Filters.eq("email", email))
             .firstOrNull()
     }
 
-    override suspend fun insertUser(user: User): Boolean {
+    override suspend fun insertUser(user: User): String? {
         return mongoDb.getCollection<User>(USER_COLLECTION)
             .insertOne(user)
-            .wasAcknowledged()
+            .insertedId?.toString()
     }
 }
