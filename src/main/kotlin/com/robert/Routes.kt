@@ -4,6 +4,7 @@ import com.robert.domain.models.User
 import com.robert.domain.ports.UserRepository
 import com.robert.request.AuthRequest
 import com.robert.response.AuthResponse
+import com.robert.response.ErrorResponse
 import com.robert.security.hashing.HashingService
 import com.robert.security.hashing.SaltedHash
 import com.robert.security.tokens.TokenClaim
@@ -26,14 +27,14 @@ fun Route.signUp(
 ) {
     post("signup") {
         val request = call.receiveNullable<AuthRequest>() ?: kotlin.run {
-            call.respond(HttpStatusCode.BadRequest, "Invalid request")
+            call.respond(HttpStatusCode.BadRequest, ErrorResponse(message = "Invalid request"))
             return@post
         }
 
         val areFieldsBlank = request.email.isBlank() || request.password.isBlank()
         val isPwTooShort = request.password.length < 8
         if(areFieldsBlank || isPwTooShort) {
-            call.respond(HttpStatusCode.Conflict, "Invalid username or password")
+            call.respond(HttpStatusCode.Conflict, ErrorResponse(message = "Invalid username or password"))
             return@post
         }
 
@@ -47,13 +48,13 @@ fun Route.signUp(
         // Verify if user already exists
         val dbUser = userDataSource.getUserByEmail(user.email)
         if(dbUser != null){
-            call.respond(HttpStatusCode.Conflict, "User with this email already exists")
+            call.respond(HttpStatusCode.Forbidden, ErrorResponse(message ="User with this email already exists"))
             return@post
         }
 
         val insertedId = userDataSource.insertUser(user)
         if(insertedId == null)  {
-            call.respond(HttpStatusCode.Conflict, "Unknown Error occurred")
+            call.respond(HttpStatusCode.Conflict, ErrorResponse(message ="Unknown Error occurred"))
             return@post
         }
 
@@ -82,13 +83,13 @@ fun Route.signIn(
 ) {
     post("signin") {
         val request = call.receiveNullable<AuthRequest>() ?: kotlin.run {
-            call.respond(HttpStatusCode.BadRequest, "Invalid request")
+            call.respond(HttpStatusCode.BadRequest, ErrorResponse(message ="Invalid request"))
             return@post
         }
 
         val user = userDataSource.getUserByEmail(request.email)
         if(user == null) {
-            call.respond(HttpStatusCode.Conflict, "Incorrect username or password")
+            call.respond(HttpStatusCode.Conflict, ErrorResponse(message = "Incorrect username or password"))
             return@post
         }
 
@@ -101,7 +102,7 @@ fun Route.signIn(
         )
         if(!isValidPassword) {
             println("Entered hash: ${DigestUtils.sha256Hex("${user.salt}${request.password}")}, Hashed PW: ${user.password}")
-            call.respond(HttpStatusCode.Conflict, "Incorrect username or password")
+            call.respond(HttpStatusCode.Conflict, ErrorResponse(message ="Incorrect username or password"))
             return@post
         }
 
