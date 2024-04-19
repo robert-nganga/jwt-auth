@@ -3,6 +3,7 @@ package com.robert
 import com.mongodb.kotlin.client.coroutine.MongoClient
 import com.mongodb.kotlin.client.coroutine.MongoDatabase
 import com.robert.domain.models.User
+import com.robert.infrastructure.repository.TransactionRepositoryImpl
 import com.robert.infrastructure.repository.UserRepositoryImpl
 import com.robert.plugins.*
 import com.robert.security.hashing.SHA256HashingService
@@ -44,10 +45,11 @@ fun Application.module() {
         secret = "secret"
     )
     val hashingService = SHA256HashingService()
+    val transactionRepository = TransactionRepositoryImpl(db)
     configureMonitoring()
     configureSerialization()
     configureSecurity(tokenConfig)
-    configureRouting(userDataSource, hashingService, tokenService, tokenConfig)
+    configureRouting(userDataSource, hashingService, tokenService, tokenConfig, transactionRepository)
 }
 
 fun createMongoDb(connectionString: String, databaseName: String): MongoDatabase{

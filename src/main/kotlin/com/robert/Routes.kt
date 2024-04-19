@@ -1,10 +1,14 @@
 package com.robert
 
+import com.robert.domain.models.Transaction
 import com.robert.domain.models.User
+import com.robert.domain.ports.TransactionRepository
 import com.robert.domain.ports.UserRepository
 import com.robert.request.AuthRequest
+import com.robert.request.TransactionRequest
 import com.robert.response.AuthResponse
 import com.robert.response.ErrorResponse
+import com.robert.response.toTransactionResponse
 import com.robert.response.toUserResponse
 import com.robert.security.hashing.HashingService
 import com.robert.security.hashing.SaltedHash
@@ -19,6 +23,7 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import org.apache.commons.codec.digest.DigestUtils
+import org.bson.types.ObjectId
 
 fun Route.signUp(
     hashingService: HashingService,
@@ -143,14 +148,74 @@ fun Route.getSecretInfo(
                 call.respond(HttpStatusCode.Conflict, ErrorResponse(message = "User not found"))
                 return@get
             }
-            println("*********************** id from token $userId")
             val user = userDataSource.getUserById(userId)
-            println("*********************** id from database $user")
+
             if(user == null){
                 call.respond(HttpStatusCode.Conflict, ErrorResponse(message = "User not found"))
                 return@get
             }
             call.respond(HttpStatusCode.OK, user.toUserResponse())
+        }
+    }
+}
+
+fun Route.insertTransaction(
+    transactionRepository: TransactionRepository
+){
+    authenticate {
+        post("insert-transaction") {
+            val principal = call.principal<JWTPrincipal>()
+            val userId = principal?.getClaim("userId", String::class)
+            if(userId == null){
+                call.respond(HttpStatusCode.Conflict, ErrorResponse(message = "User not found"))
+                return@post
+            }
+
+            val request = call.receiveNullable<TransactionRequest>() ?: kotlin.run {
+                call.respond(HttpStatusCode.BadRequest, ErrorResponse(message ="Invalid request"))
+                return@post
+            }
+
+            val areFieldsValid = request.amount <= 0 || request.type.isBlank()
+            if(areFieldsValid) {
+                call.respond(HttpStatusCode.Conflict, ErrorResponse(message = "Invalid transaction details"))
+                return@post
+            }
+
+            val transaction = Transaction(
+                userId = ObjectId(userId),
+                amount = request.amount,
+                type = request.type
+            )
+            val insertedId = transactionRepository.insertTransaction(transaction)
+            if(insertedId == null)  {
+                call.respond(HttpStatusCode.Conflict, ErrorResponse(message ="Unknown Error occurred"))
+                return@post
+            }
+            val dbTransaction = transactionRepository.getTransactionById(insertedId)
+            if(dbTransaction == null)  {
+                call.respond(HttpStatusCode.Conflict, ErrorResponse(message ="Unknown Error occurred"))
+                return@post
+            }
+            call.respond(HttpStatusCode.OK, dbTransaction.toTransactionResponse())
+        }
+    }
+}
+
+fun Route.getUserTransactions(
+    transactionRepository: TransactionRepository
+){
+    authenticate{
+        get("transactions") {
+            val principal = call.principal<JWTPrincipal>()
+            val userId = principal?.getClaim("userId", String::class)
+            if(userId == null){
+                call.respond(HttpStatusCode.Conflict, ErrorResponse(message = "User not found"))
+                return@get
+            }
+            val transactions = transactionRepository.getTransactionsByUserId(userId)
+            println("my transactions are $transactions")
+            call.respond(HttpStatusCode.OK, transactions.map { it.toTransactionResponse() })
         }
     }
 }

@@ -5,9 +5,9 @@ import org.bson.types.ObjectId
 
 data class Transaction(
     @BsonId
-    val id: ObjectId,
+    val id: ObjectId = ObjectId(),
     val userId: ObjectId,
-    val amount: String,
-    val date: String,
+    val amount: Int,
+    val date: Long = System.currentTimeMillis(),
     val type: String
 )
