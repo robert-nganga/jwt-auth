@@ -20,29 +20,18 @@ fun main(args: Array<String>) {
 @Suppress("unused")
 fun Application.module() {
     val pass = System.getenv("MONGO_PW")
-    val secret = System.getenv("JWT_SECRET")
+    //val secret = System.getenv("JWT_SECRET")
     val db = createMongoDb(
         "mongodb+srv://admin:$pass@cluster0.wqakbcd.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0",
         "Cluster0"
     )
     val userDataSource = UserRepositoryImpl(db)
-//    GlobalScope.launch {
-//        val user = User(
-//            email = "testings@gmail.com",
-//            password = "testpassword",
-//            salt = "salts"
-//        )
-//        val inserted = userDataSource.insertUser(user)
-//        val dbUser = userDataSource.getUserByEmail(user.email)
-//        println("********************************************:: $inserted")
-//        println("********************************************:: $dbUser")
-//    }
     val tokenService = JwtTokenService()
     val tokenConfig = TokenConfig(
         issuer = environment.config.property("jwt.issuer").getString(),
         audience = environment.config.property("jwt.audience").getString(),
-        expiresIn = 365L * 1000L * 60L * 60L * 24L,
-        secret = "secret"
+        expiresIn = 7L * 1000L * 60L * 60L * 24L,
+        secret = "my-secret"
     )
     val hashingService = SHA256HashingService()
     val transactionRepository = TransactionRepositoryImpl(db)
