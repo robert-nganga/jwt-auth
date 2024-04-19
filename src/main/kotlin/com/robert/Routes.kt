@@ -5,6 +5,7 @@ import com.robert.domain.ports.UserRepository
 import com.robert.request.AuthRequest
 import com.robert.response.AuthResponse
 import com.robert.response.ErrorResponse
+import com.robert.response.toUserResponse
 import com.robert.security.hashing.HashingService
 import com.robert.security.hashing.SaltedHash
 import com.robert.security.tokens.TokenClaim
@@ -131,12 +132,25 @@ fun Route.authenticate() {
     }
 }
 
-fun Route.getSecretInfo() {
+fun Route.getSecretInfo(
+    userDataSource: UserRepository,
+) {
     authenticate {
-        get("secret") {
+        get("account") {
             val principal = call.principal<JWTPrincipal>()
             val userId = principal?.getClaim("userId", String::class)
-            call.respond(HttpStatusCode.OK, "Your userId is $userId")
+            if(userId == null){
+                call.respond(HttpStatusCode.Conflict, ErrorResponse(message = "User not found"))
+                return@get
+            }
+            println("*********************** id from token $userId")
+            val user = userDataSource.getUserById(userId)
+            println("*********************** id from database $user")
+            if(user == null){
+                call.respond(HttpStatusCode.Conflict, ErrorResponse(message = "User not found"))
+                return@get
+            }
+            call.respond(HttpStatusCode.OK, user.toUserResponse())
         }
     }
 }

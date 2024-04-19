@@ -22,6 +22,6 @@ fun Application.configureRouting(
         signIn(userDataSource, hashingService, tokenService, tokenConfig)
         signUp(hashingService, userDataSource, tokenService, tokenConfig)
         authenticate()
-        getSecretInfo()
+        getSecretInfo(userDataSource)
     }
 }

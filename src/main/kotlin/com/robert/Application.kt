@@ -27,9 +27,9 @@ fun Application.module() {
     val userDataSource = UserRepositoryImpl(db)
 //    GlobalScope.launch {
 //        val user = User(
-//            email = "test1@gmail.com",
+//            email = "testings@gmail.com",
 //            password = "testpassword",
-//            salt = "salt"
+//            salt = "salts"
 //        )
 //        val inserted = userDataSource.insertUser(user)
 //        val dbUser = userDataSource.getUserByEmail(user.email)
