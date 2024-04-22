@@ -8,6 +8,8 @@ data class User(
     val id: ObjectId = ObjectId(),
     val name: String,
     val email: String,
+    val amount: Int = 0,
+    val due: Int = 0,
     val password: String,
     val salt: String,
 )

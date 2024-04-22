@@ -4,7 +4,8 @@ import kotlinx.serialization.Serializable
 
 
 @Serializable
-data class AuthRequest(
+data class UserRequest(
     val email: String,
-    val password: String
+    val password: String,
+    val name: String
 )

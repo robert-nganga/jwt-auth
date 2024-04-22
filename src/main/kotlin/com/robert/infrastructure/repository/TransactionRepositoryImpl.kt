@@ -1,7 +1,8 @@
 package com.robert.infrastructure.repository
 
 import com.mongodb.client.model.Filters
-import com.mongodb.kotlin.client.coroutine.MongoDatabase
+import com.mongodb.client.model.InsertOneModel
+import com.mongodb.kotlin.client.coroutine.MongoClient
 import com.robert.domain.models.Transaction
 import com.robert.domain.ports.TransactionRepository
 import kotlinx.coroutines.flow.firstOrNull
@@ -9,14 +10,16 @@ import kotlinx.coroutines.flow.toList
 import org.bson.types.ObjectId
 
 class TransactionRepositoryImpl(
-    mongoDb: MongoDatabase
+    private val mongoClient: MongoClient
 ): TransactionRepository {
 
     companion object {
         const val TRANSACTION_COLLECTION = "transactions"
+        const val MONGO_DATABASE = "Cluster0"
     }
 
-    private val transactionCollection = mongoDb.getCollection<Transaction>(TRANSACTION_COLLECTION)
+    private val mongoDatabase = mongoClient.getDatabase(MONGO_DATABASE)
+    private val transactionCollection = mongoDatabase.getCollection<Transaction>(TRANSACTION_COLLECTION)
 
     override suspend fun insertTransaction(transaction: Transaction): String? {
         return transactionCollection

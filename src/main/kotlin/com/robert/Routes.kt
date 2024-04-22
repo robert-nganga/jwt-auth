@@ -6,6 +6,7 @@ import com.robert.domain.ports.TransactionRepository
 import com.robert.domain.ports.UserRepository
 import com.robert.request.AuthRequest
 import com.robert.request.TransactionRequest
+import com.robert.request.UserRequest
 import com.robert.response.AuthResponse
 import com.robert.response.ErrorResponse
 import com.robert.response.toTransactionResponse
@@ -32,7 +33,7 @@ fun Route.signUp(
     tokenConfig: TokenConfig
 ) {
     post("signup") {
-        val request = call.receiveNullable<AuthRequest>() ?: kotlin.run {
+        val request = call.receiveNullable<UserRequest>() ?: kotlin.run {
             call.respond(HttpStatusCode.BadRequest, ErrorResponse(message = "Invalid request"))
             return@post
         }
@@ -49,6 +50,7 @@ fun Route.signUp(
             email = request.email,
             password = saltedHash.hash,
             salt = saltedHash.salt,
+            name = request.name
         )
 
         // Verify if user already exists
@@ -141,15 +143,16 @@ fun Route.getSecretInfo(
     userDataSource: UserRepository,
 ) {
     authenticate {
-        get("account") {
+        get("user") {
             val principal = call.principal<JWTPrincipal>()
             val userId = principal?.getClaim("userId", String::class)
             if(userId == null){
                 call.respond(HttpStatusCode.Conflict, ErrorResponse(message = "User not found"))
                 return@get
             }
+            println("got user id $userId")
             val user = userDataSource.getUserById(userId)
-
+            println("User is $user")
             if(user == null){
                 call.respond(HttpStatusCode.Conflict, ErrorResponse(message = "User not found"))
                 return@get
@@ -161,6 +164,7 @@ fun Route.getSecretInfo(
 
 fun Route.insertTransaction(
     transactionRepository: TransactionRepository
+
 ){
     authenticate {
         post("insert-transaction") {

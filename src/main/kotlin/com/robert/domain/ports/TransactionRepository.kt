@@ -1,6 +1,7 @@
 package com.robert.domain.ports
 
 import com.robert.domain.models.Transaction
+import com.robert.domain.models.User
 
 interface TransactionRepository {
 

@@ -7,12 +7,18 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class UserResponse(
     val id: String,
-    val email: String
+    val name: String,
+    val email: String,
+    val amount: Int,
+    val due: Int
 )
 
-fun User.toUserResponse(): UserResponse{
+fun User.toUserResponse(): UserResponse {
     return UserResponse(
         id = id.toString(),
-        email = email
+        email = email,
+        name = name,
+        amount = amount,
+        due = due
     )
 }

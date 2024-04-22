@@ -21,11 +21,11 @@ fun main(args: Array<String>) {
 fun Application.module() {
     val pass = System.getenv("MONGO_PW")
     //val secret = System.getenv("JWT_SECRET")
-    val db = createMongoDb(
-        "mongodb+srv://admin:$pass@cluster0.wqakbcd.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0",
-        "Cluster0"
+    val mongoClient = MongoClient.create(
+        "mongodb+srv://admin:$pass@cluster0.wqakbcd.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
     )
-    val userDataSource = UserRepositoryImpl(db)
+    val mongoDatabase = mongoClient.getDatabase("Cluster0")
+    val userDataSource = UserRepositoryImpl(mongoDatabase)
     val tokenService = JwtTokenService()
     val tokenConfig = TokenConfig(
         issuer = environment.config.property("jwt.issuer").getString(),
@@ -34,7 +34,7 @@ fun Application.module() {
         secret = "my-secret"
     )
     val hashingService = SHA256HashingService()
-    val transactionRepository = TransactionRepositoryImpl(db)
+    val transactionRepository = TransactionRepositoryImpl(mongoClient)
     configureMonitoring()
     configureSerialization()
     configureSecurity(tokenConfig)
